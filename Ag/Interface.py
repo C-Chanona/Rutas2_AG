@@ -74,18 +74,19 @@ class Interface:
     @classmethod
     def create_path(cls, route):
         cls.map_widget.delete_all_path()
+        cls.map_widget.delete_all_marker()
         markers = []
         
-        for i, place in enumerate(route):
-            marker = cls.map_widget.set_marker(
-                place[1], place[2], 
-                text=f"{i+1}. {place[0]}", 
+        for i, poi in enumerate(route):
+            cls.map_widget.set_marker(
+                poi.lat, poi.lon, 
+                text=f"{i+1}. {poi.name}", 
                 text_color='black', 
                 font='Candara 11 bold', 
                 marker_color_outside='red', 
                 marker_color_circle='brown'
             )
-            markers.append((place[1], place[2]))
+            markers.append((poi.lat, poi.lon))
         
         # Crear la ruta conectando los puntos en orden
         cls.map_widget.set_path(markers, name="Tour_Route", color='blue', width=2)
