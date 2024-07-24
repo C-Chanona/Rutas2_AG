@@ -2,8 +2,8 @@ import random
 from Ag.Modeling import Model as md
 
 class Optimization:
-    def __init__(self, max_places, days):
-        self.max_places = max_places
+    def __init__(self, min_places, days):
+        self.min_places = min_places
         self.days = days
     
     def selection(self, population_with_fitness):
@@ -11,7 +11,7 @@ class Optimization:
         parents = []
 
         for _ in range(len(population_with_fitness)):
-            tournament = random.sample(population_with_fitness, min(self.max_places, len(population_with_fitness)))
+            tournament = random.sample(population_with_fitness, min(self.min_places, len(population_with_fitness)))
             winner = min(tournament, key=lambda x: x['fitness'])
             selected.append(winner['route'])
         
@@ -21,10 +21,10 @@ class Optimization:
             second_route = random.choice(selected)
             selected.remove(second_route)
             parents.append((first_route, second_route))
-
+        
         return parents
     
-    def crossover(self, selected):
+    def crossover(self, selected): # cruce de orden parcial (Partially Mapped Crossover, PMX)
         childrens = []
         for parent1, parent2 in selected:
             start = random.randint(0, len(parent1)-1)
@@ -36,21 +36,24 @@ class Optimization:
         return childrens
     
     def mutation(self, childrens):
-        print("MUTACION", childrens)
         for children in childrens:
             if random.random() > 0.3:
                 i, j = random.sample(range(len(children)), 2)
                 children[i], children[j] = children[j], children[i]
+                for poi in children:
+                    if random.random() > 0.4:
+                        poi.visit_time = max(0.5, min(3, poi.visit_time + random.uniform(-0.5, 0.5))) #Mantiene el tiempo de visita entre 0.5 y 3 horas
+
         return childrens
     
     def poda(self, population_with_fitness):
         sorted_population = sorted(population_with_fitness, key=lambda x: x['fitness'])
         best_route = sorted_population[0]
-        next_generation = [best_route['path']]
+        next_generation = [best_route['route']]
         
         # Selecciona el resto de individuos aleatoriamente
-        while len(next_generation) < self.max_places:
+        while len(next_generation) < self.days:
             random_individual = random.choice(population_with_fitness)
-            next_generation.append(random_individual['path'])
+            next_generation.append(random_individual['route'])
         
-        return next_generation
+        return next_generation, best_route

@@ -1,5 +1,6 @@
 import ttkbootstrap as ttkb
 import tkintermapview as mp
+from ttkbootstrap.constants import LEFT, BOTH, VERTICAL, RIGHT, Y
 
 class Interface:
 
@@ -26,11 +27,11 @@ class Interface:
 
     @classmethod
     def create_window(cls, main):
-        # cls.window.configure(background="#202020")
         cls.window.title("Optimizador de rutas")
-        cls.window.geometry("810x850")
+        # cls.window.geometry("810x850")
+        cls.window.geometry("1320x850")
         window_width = cls.window.winfo_reqwidth()
-        position_right = int(cls.window.winfo_screenwidth()/2 - window_width/2 - 200)
+        position_right = int(cls.window.winfo_screenwidth()/2 - window_width/2 - 200) -300
         cls.window.geometry("+{}+50".format(position_right))
 
         country = cls.create_input("Pais a visitar:", labx=60, laby=30, inpx=60, inpy=60)
@@ -49,9 +50,10 @@ class Interface:
         button.place(x=350, y=270)
         button.bind("<Enter>", cls.on_enter), button.bind("<Leave>", cls.on_leave)
 
-        cls.map_widget.place(relx=0.5, rely=0.7, anchor='center')
+        cls.map_widget.place(relx=0.3, rely=0.65, anchor='center')
         cls.map_widget.set_zoom(15)
         cls.map_widget.set_position(19.4326, -99.1332)
+        cls.create_table()
 
         cls.window.mainloop()
     
@@ -72,21 +74,57 @@ class Interface:
         event.widget.config(bootstyle='success-outline')  # Restablece el estilo original al salir el ratón
 
     @classmethod
-    def create_path(cls, route):
-        cls.map_widget.delete_all_path()
-        cls.map_widget.delete_all_marker()
-        markers = []
+    def create_table(cls):
+        # Crea el frame que contendrá la tabla
+        table_frame = ttkb.Frame(cls.window)
+        table_frame.place(x=810, y=50, width=490, height=730)  # Ajusta la posición y tamaño según necesites
+
+        # Crea el Treeview dentro del frame
+        cls.tree = ttkb.Treeview(table_frame, columns=("Uno", "Dos", "Tres", "Cuatro"), show="headings", bootstyle="info")
+        cls.tree.pack(side=LEFT, fill=BOTH, expand=True)
+
+        # Define las columnas
+        cls.tree.heading("Uno", text="Punto de interés")
+        cls.tree.heading("Dos", text="Nombre")
+        cls.tree.heading("Tres", text="Tiempo de visita")
+        cls.tree.heading("Cuatro", text="Distancia y Duracion")
+
+        # Configura el tamaño de las columnas
+        cls.tree.column("Uno", width=100)
+        cls.tree.column("Dos", width=100)
+        cls.tree.column("Tres", width=100)
+        cls.tree.column("Cuatro", width=100)
+
+        # Scrollbar para el Treeview
+        scrollbar = ttkb.Scrollbar(table_frame, orient=VERTICAL, command=cls.tree.yview)
+        scrollbar.pack(side=RIGHT, fill=Y)
+        cls.tree.configure(yscrollcommand=scrollbar.set)
+
+    @classmethod
+    def update_table(cls, route):
+        # Elimina los datos existentes en la tabla
+        for i in cls.tree.get_children():
+            cls.tree.delete(i)
         
-        for i, poi in enumerate(route):
-            cls.map_widget.set_marker(
-                poi.lat, poi.lon, 
-                text=f"{i+1}. {poi.name}", 
-                text_color='black', 
-                font='Candara 11 bold', 
-                marker_color_outside='red', 
-                marker_color_circle='brown'
-            )
-            markers.append((poi.lat, poi.lon))
+        # Verifica si hay elementos en la ruta
+        if not route["path"]:
+            return  # Sale de la función si la ruta está vacía
         
-        # Crear la ruta conectando los puntos en orden
-        cls.map_widget.set_path(markers, name="Tour_Route", color='blue', width=2)
+        # Añade el primer elemento con toda la información
+        first_row = {
+            "valor1": 1,
+            "valor2": route["path"][0].name,
+            "valor3": round(route["path"][0].visit_time, 2),
+            "valor4": f"{round(route['distance'], 2)} km, {route['duration']} h"
+        }
+        cls.tree.insert("", "end", values=(first_row["valor1"], first_row["valor2"], first_row["valor3"], first_row["valor4"]))
+        
+        # Añade el resto de los elementos
+        for index, path_item in enumerate(route["path"][1:], start=2):  # Comienza en el segundo elemento, índice ajustado a 2
+            row = {
+                "valor1": index,
+                "valor2": path_item.name,
+                "valor3": round(path_item.visit_time, 2),
+                "valor4": ""  # Vacío para los siguientes elementos
+            }
+            cls.tree.insert("", "end", values=(row["valor1"], row["valor2"], row["valor3"], row["valor4"]))
