@@ -1,5 +1,6 @@
 import ttkbootstrap as ttkb
 import tkintermapview as mp
+import matplotlib.pyplot as plt
 from ttkbootstrap.constants import LEFT, BOTH, VERTICAL, RIGHT, Y
 
 class Interface:
@@ -128,3 +129,14 @@ class Interface:
                 "valor4": ""  # Vacío para los siguientes elementos
             }
             cls.tree.insert("", "end", values=(row["valor1"], row["valor2"], row["valor3"], row["valor4"]))
+
+    @classmethod
+    def create_plot(cls, bests_by_generation):
+        fitness_values = [individual['fitness'] for individual in bests_by_generation]
+        generations = list(range(1, len(fitness_values) + 1))
+        plt.plot(generations, fitness_values)
+        plt.xlabel('Generación')
+        plt.ylabel('Fitness del mejor individuo')
+        plt.title('Evolución del Fitness del Mejor Individuo por Generación')
+        plt.grid(True)
+        plt.show()

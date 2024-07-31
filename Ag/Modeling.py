@@ -29,7 +29,7 @@ class Model:
             return None
 
     @staticmethod
-    def get_nearby_places(location, place_type, limit=10, radius=5000):
+    def get_nearby_places(location, place_type, limit=10, radius=10000):
         url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
         params = {
             "key": Model.api_key,
@@ -166,6 +166,16 @@ class Model:
         distance, duration, polyline_encoded = Model.get_data_with_api(markers)
         # Crear la ruta conectando los puntos en orden
         ui.map_widget.set_path(polyline_encoded, name="Tour_Route", color='blue', width=3)
-        route['distance'] = distance
-        route['duration'] = round(total_time + duration, 2)
+        # route['distance'] = distance
+        # route['duration'] = round(total_time + duration, 2)
+
+        # Redondear solo si la parte decimal es .6 o mayor
+        total_duration = total_time + duration
+        decimal_part = total_duration - int(total_duration)
+        if decimal_part >= 0.6:
+            total_duration = math.ceil(total_duration)
+        else:
+            total_duration = round(total_duration, 2)
+        
+        route['duration'] = total_duration
         return route

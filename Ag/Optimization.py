@@ -37,7 +37,7 @@ class Optimization:
     
     def mutation(self, childrens):
         for children in childrens:
-            if random.random() > 0.3:
+            if random.random() > 0.2:
                 i, j = random.sample(range(len(children)), 2)
                 children[i], children[j] = children[j], children[i]
                 for poi in children:

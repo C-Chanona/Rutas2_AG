@@ -3,29 +3,35 @@ from Ag.Optimization import Optimization
 from Ag.Modeling import Model as md
 from Ag.Interface import Interface as ui
 
-def main(country="Mexico", state="Jalisco", city="Guadalaja", days=4, min_places=5, poi_type="park", generation=300):
+def main(country="Mexico", state="Jalisco", city="Guadalaja", days=4, min_places=5, poi_type="park", generation=100):
     init = Initialization(country, state, city, days, poi_type)
     opt = Optimization(min_places, days)
+    bests_by_generation = []
 
     population = init.generate_population(min_places)
     fitness_results = init.fitness(population)
     best_route = min(fitness_results, key=lambda x: x['fitness'])
-
+    bests_by_generation.append(best_route)
+    
     for _ in range(generation):
         selected = opt.selection(fitness_results)
         children = opt.crossover(selected)
         children = opt.mutation(children)
         new_population = list(population) + list(children)
         fitness_results = init.fitness(new_population)
+        best_route = min(fitness_results, key=lambda x: x['fitness'])
         population, currently_best = opt.poda(fitness_results)
         
         if currently_best['fitness'] < best_route['fitness']:
             best_route = currently_best
+
+        bests_by_generation.append(best_route)
     
     route = md.create_path(best_route)
     
     ui.update_table(route)
 
+    ui.create_plot(bests_by_generation)
 
 if __name__ =='__main__':
     ui.create_window(main)
